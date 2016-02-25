@@ -46,7 +46,7 @@ optionally ilts will also write to a log file, in addition to stdout. This occur
 
 # BUGS
 
-Most of these options are not currently implemented.  This is a design doc more than a readme.
+See https://github.com/wwalker/ilts/issues
 
 May spontaneously spew forth unspeakable evil.
 
