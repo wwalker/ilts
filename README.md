@@ -4,7 +4,16 @@ ilts - In Line Time Stamps : for adding timestamps to stdout of a program withou
 
 # SYNOPSIS
 
-    ilts <-p|--prefix filename_prefix <-n|--no-stdout>> <-s|--suffix filename_suffix> <-t|--time> <-T|--time-format time_format> <-u|--utc>
+    ilts <-P|--printf-format format>
+         <-p|--prefix filename_prefix>
+           <-n|--no-stdout>
+           <-s|--suffix filename_suffix>
+           <-t|--time>
+           <-T|--time-format time_format>
+             <-u|--utc>
+           <-a|--append>
+         <-S|--start-line>
+         <-E|--end-line>
 
 # DESCRIPTION
 
@@ -15,6 +24,8 @@ optionally ilts will also write to a log file, in addition to stdout. This occur
 
 # OPTIONS
 
+     -p|--printf-format format
+       format to print each line of input.  defaults to "%s - %s\n"
      -p|--prefix filepath
         the use of -p turns on logging to the file prefixed with filepath.
           -n|--no-stdout
@@ -31,7 +42,7 @@ optionally ilts will also write to a log file, in addition to stdout. This occur
             the use of -a appends to the log file rather than truncating the file
      -S|--start-line
      -E|--end-line
-        the use of -S or -E enables a start and end line.  these are useful in case the app generates no output, or delay a long time befor the first line of output or after the last line of output.
+        the use of -S or -E enables a start and end line.  these are useful in case the app generates no output, or delay a long time befor the first line of output or after the last line of output.  The messages are "Execution begins" and "Execution ends"
 
 # BUGS
 
