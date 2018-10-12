@@ -3,6 +3,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"os/exec"
 	"time"
 
 	"github.com/alecthomas/kingpin"
@@ -22,6 +23,8 @@ type Cfg struct {
 	endLine        bool
 }
 
+var cmd_args *[]string
+
 func (config *Cfg) parseArgs() {
 	app := kingpin.New("ilts - In Line Time Stamper", "ilts prepends messages with a time stamp and writes to stdout")
 
@@ -35,6 +38,7 @@ func (config *Cfg) parseArgs() {
 	app.Flag("append", "append to rather than truncate existin logfile").Short('a').BoolVar(&config.appendToLog)
 	app.Flag("start-line", "immediately write a timestamped \"Starting\" upon startup").Short('S').BoolVar(&config.startLine)
 	app.Flag("end-line", "write a timestamped \"Ending\" when exiting").Short('E').BoolVar(&config.endLine)
+	cmd_args = app.Arg("cmd", "commands").Strings()
 
 	kingpin.MustParse(app.Parse(os.Args[1:]))
 	config.unsupportedFlags()
@@ -72,10 +76,42 @@ func main() {
 	if cfg.startLine {
 		cfg.printMessage("Execution begins")
 	}
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		line := scanner.Text()
-		cfg.printMessage(line)
+	if len(*cmd_args) == 0 {
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			line := scanner.Text()
+			cfg.printMessage(line)
+		}
+	} else {
+		cmd := exec.Command((*cmd_args)[0], (*cmd_args)[1:]...)
+		stdout_pipe, err := cmd.StdoutPipe()
+		if err != nil {
+			log_fatal(err)
+		}
+		stdout := bufio.NewScanner(stdout_pipe)
+		// create a go routine pushing lines into a channel
+
+		stderr_pipe, err := cmd.StderrPipe()
+		if err != nil {
+			log_fatal(err)
+		}
+		stderr := bufio.NewScanner(stderr_pipe)
+		// create a go routine pushing lines into a channel
+
+		go func() {
+			for stderr.Scan() {
+				cfg.printMessage(stderr.Text())
+			}
+		}()
+
+		if err := cmd.Start(); err != nil {
+			log_fatal(err)
+		}
+		// consume from the channels and cfg.printMessage(line)
+		for stdout.Scan() {
+			cfg.printMessage(stdout.Text())
+		}
+
 	}
 	if cfg.endLine {
 		cfg.printMessage("Execution ends")
@@ -119,4 +155,9 @@ func (cfg *Cfg) printMessage(message string) {
 	if !cfg.noStdout {
 		fmt.Printf(cfg.printfFormat, nowString, message)
 	}
+}
+
+func log_fatal(message error) {
+	fmt.Fprintln(os.Stderr, message)
+	os.Exit(1)
 }
